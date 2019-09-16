@@ -1,0 +1,38 @@
+From 6bdc15e6d6e76fba6edf0e2ce08670d3549e066d Mon Sep 17 00:00:00 2001
+From: Vipul Kumar <vipulk@xilinx.com>
+Date: Mon, 9 Apr 2018 17:55:35 +0530
+Subject: [UBOOT PATCH] mmc: Added support to switch emmc to correct frequency
+
+When no-1-8-v is added in device tree, it slows down emmc to 25MHz.
+This patch fixed this issue by setting correct emmc frequency.
+Now, after adding no-1-8-v is added in device tree, it slows down emmc
+to 52MHz.
+
+Signed-off-by: Vipul Kumar <vipulk@xilinx.com>
+Signed-off-by: Siva Durga Prasad Paladugu <sivadur@xilinx.com>
+---
+- CR- 999075
+- Branch: master-next-test
+---
+ drivers/mmc/mmc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+index 0611349..a30c81d 100644
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -750,9 +750,9 @@ static int mmc_change_freq(struct mmc *mmc)
+ 		return 0;
+ 
+ 	/* High Speed is set, there are three types: 200MHZ, 52MHz and 26MHz */
+-	if (cardtype & EXT_CSD_CARD_TYPE_HS200) {
++	if (cardtype & EXT_CSD_CARD_TYPE_HS200)
+ 		mmc->card_caps |= MMC_MODE_HS200;
+-	} else if (cardtype & EXT_CSD_CARD_TYPE_52) {
++	if (cardtype & EXT_CSD_CARD_TYPE_52) {
+ 		if (cardtype & EXT_CSD_CARD_TYPE_DDR_1_8V)
+ 			mmc->card_caps |= MMC_MODE_DDR_52MHz;
+ 		mmc->card_caps |= MMC_MODE_HS_52MHz | MMC_MODE_HS;
+-- 
+2.7.4
+

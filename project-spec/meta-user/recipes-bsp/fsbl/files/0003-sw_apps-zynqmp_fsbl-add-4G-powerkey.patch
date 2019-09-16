@@ -1,0 +1,86 @@
+From 651a41cc41106325b16c336a5f66141589c38acc Mon Sep 17 00:00:00 2001
+From: dongkesi <skd2278@gmail.com>
+Date: Tue, 17 Sep 2019 16:42:09 +0800
+Subject: [PATCH 3/3] sw_apps: zynqmp_fsbl: add 4G powerkey
+
+---
+ lib/sw_apps/zynqmp_fsbl/src/xfsbl_hooks.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_hooks.c b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_hooks.c
+index dc381ea..b0a3107 100644
+--- a/lib/sw_apps/zynqmp_fsbl/src/xfsbl_hooks.c
++++ b/lib/sw_apps/zynqmp_fsbl/src/xfsbl_hooks.c
+@@ -62,7 +62,7 @@
+ /***************** Macros (Inline Functions) Definitions *********************/
+ 
+ /************************** Function Prototypes ******************************/
+-static int rgmii_reset();
++static int devices_reset();
+ /************************** Variable Definitions *****************************/
+ #ifdef XFSBL_BS
+ u32 XFsbl_HookBeforeBSDownload(void )
+@@ -85,7 +85,7 @@ u32 XFsbl_HookAfterBSDownload(void )
+ 	/**
+ 	 * Add the code here
+ 	 */
+-	rgmii_reset();
++	devices_reset();
+ 	return Status;
+ }
+ #endif
+@@ -211,8 +211,9 @@ u32 XFsbl_HookGetPosBootType(void)
+ 
+ #include "xgpiops.h"
+ 
+-static int rgmii_reset(void)
++static int devices_reset(void)
+ {
++#define PWRKEY_CTR_PIN		83  //4G PowerKey
+ #define	RGMII_RESET_PIN		82  //PS-MIO-GEM3
+ #define	SGMII0_RESET_PIN	78  //PS-GTR2-GEM2
+ #define	SGMII1_RESET_PIN	80  //PS-GTR1-GEM1
+@@ -220,7 +221,7 @@ static int rgmii_reset(void)
+ 	XGpioPs_Config *ConfigPtr;
+ 	XGpioPs Gpio;	/* The driver instance for GPIO Device. */
+ 
+-    XFsbl_Printf(DEBUG_PRINT_ALWAYS, "RGMII_RESET_PIN Start\r\n");
++    XFsbl_Printf(DEBUG_PRINT_ALWAYS, "PER_RESET_PIN Start\r\n");
+ 
+ 	/*
+ 	 * Initialize the GPIO driver.
+@@ -229,7 +230,7 @@ static int rgmii_reset(void)
+ 	Status = XGpioPs_CfgInitialize(&Gpio, ConfigPtr,
+ 					ConfigPtr->BaseAddr);
+ 	if (Status != XST_SUCCESS) {
+-		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "RGMII_RESET_PIN Config failed\r\n");
++		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "PER_RESET_PIN Config failed\r\n");
+ 		return XST_FAILURE;
+ 	}
+ 
+@@ -240,16 +241,21 @@ static int rgmii_reset(void)
+ 	XGpioPs_SetOutputEnablePin(&Gpio, SGMII0_RESET_PIN, 1);
+ 	XGpioPs_SetDirectionPin(&Gpio, SGMII1_RESET_PIN, 1);
+ 	XGpioPs_SetOutputEnablePin(&Gpio, SGMII1_RESET_PIN, 1);
++	XGpioPs_SetDirectionPin(&Gpio, PWRKEY_CTR_PIN, 1);
++	XGpioPs_SetOutputEnablePin(&Gpio, PWRKEY_CTR_PIN, 1);
+ 
+ 	XGpioPs_WritePin(&Gpio, RGMII_RESET_PIN, 0);
+ 	XGpioPs_WritePin(&Gpio, SGMII0_RESET_PIN, 0);
+ 	XGpioPs_WritePin(&Gpio, SGMII1_RESET_PIN, 0);
++	XGpioPs_WritePin(&Gpio, PWRKEY_CTR_PIN, 1);
+ 	(void)usleep(10000);
+ 	XGpioPs_WritePin(&Gpio, RGMII_RESET_PIN, 1);
+ 	XGpioPs_WritePin(&Gpio, SGMII0_RESET_PIN, 1);
+ 	XGpioPs_WritePin(&Gpio, SGMII1_RESET_PIN, 1);
++	(void)usleep(500000); //>=500ms
++	XGpioPs_WritePin(&Gpio, PWRKEY_CTR_PIN, 0);
+ 
+-	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "RGMII_RESET_PIN Done\r\n");
++	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "PER_RESET_PIN Done\r\n");
+ 	return XST_SUCCESS;
+ }
+ 
+-- 
+2.7.4
+

@@ -1,0 +1,316 @@
+/include/ "system-conf.dtsi"
+#include <dt-bindings/phy/phy.h>
+/ {
+        chosen {
+                bootargs = "console=ttyPS0,115200 debug clk_ignore_unused earlyprintk root=/dev/mmcblk1p2 rw rootwait uio_pdrv_genirq.of_id=generic-uio";
+                stdout-path = "serial0:115200n8";
+        };
+
+	aliases {
+                ethernet0 = &gem2;
+                ethernet1 = &gem1;
+                ethernet2 = &gem3;
+                ethernet3 = &axi_ethernetlite_0;
+
+                serial0 = &uart0;
+		serial1 = &uart1;
+//                serial2 = &PL_UART3;
+//                serial3 = &PL_UART4;
+//                serial4 = &PL_UART1;
+	};
+};
+
+/* emmc ok */
+&sdhci0 {
+    no-1-8-v;
+};
+
+/* sd card ok */
+&sdhci1 {
+    clock-frequency = <52000000>;
+    status = "okay";
+    xlnx,has-cd = <0x1>;
+    xlnx,has-power = <0x0>;
+    xlnx,has-wp = <0x1>;
+    disable-wp;
+    no-1-8-v;
+};
+
+
+&usb0 {
+    clocks = <0x3 0x20>;
+    clock-names = "bus_clk";
+    status = "okay";
+};
+
+&dwc3_0 {
+    status = "okay";
+    dr_mode = "host";
+};
+
+&gem3 {
+    local-mac-address = [10 AB DC 3E 03 51];
+    phy-handle = <&phy3>;
+    xlnx,has-mdio = <0x1>;
+    psu_ethernet_3_mdio: mdio {
+        compatiable = "cdns,macb-mdio";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        phy3: phy@4 {
+            device_type = "ethernet-phy";
+            reg = <0x04>;
+        };
+    };
+};
+
+&gem2 {
+    local-mac-address = [00 AB DC 3E 02 51];
+    phy-handle = <&phy2>;
+    phy-mode = "sgmii";
+    phy-reset-gpio = <&gpio 416 1>;
+    phy-reset-active-low;
+    xlnx,has-mdio = <0x1>;
+    is-internal-pcspma = "true";
+    psu_ethernet_2_mdio: mdio {
+        compatiable = "cdns,macb-mdio";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        phy2: phy@0 {
+            reg = <0>;
+            device_type = "ethernet-phy";
+            ti,rx-internal-delay = <0x8>;
+            ti,tx-internal-delay = <0xa>;
+            ti,fifo-depth = <0x1>;
+            ti,dp83867-rxctrl-strap-quirk;
+        };
+    };
+};
+
+&gem1 {
+    local-mac-address = [00 AB DC 3E 01 51];
+    phy-handle = <&phy1>;
+    phy-mode = "sgmii";
+    phy-reset-gpio = <&gpio 418 1>;
+    phy-reset-active-low;
+    xlnx,has-mdio = <0x1>;
+    is-internal-pcspma = "true";
+    psu_ethernet_1_mdio: mdio {
+        compatiable = "cdns,macb-mdio";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        phy1: phy@c {
+            reg = <0x0C>;
+            device_type = "ethernet-phy";
+            ti,rx-internal-delay = <0x8>;
+            ti,tx-internal-delay = <0xa>;
+            ti,fifo-depth = <0x1>;
+            ti,dp83867-rxctrl-strap-quirk;
+        };
+    };
+};
+
+&gem0 {
+    status = "disabled";
+};
+
+&axi_ethernetlite_0 {
+    local-mac-address = [00 0a 35 00 22 13];
+    phy-handle = <&phy4>;
+    //status = "disabled";
+    xlnx,has-mdio = <0x1>;
+    mdio {
+        phy4: phy@1 {
+            device_type = "ethernet-phy";
+            reg = <0x1>;
+        };
+    };
+};
+
+&audio_codec_ctrl_0 {
+    compatible = "generic-uio";
+};
+
+#if 0
+&amba {
+    ref25: ref25M {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <25000000>;
+    };
+};
+
+&i2c0 {
+    si5338: clock-generator@70 {
+        compatible = "silabs,si5338";
+        status = "disabled";
+        reg = <0x70>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        #clock-cells = <1>;
+
+        clocks = <0>, <0>, <&ref25>, <0>, <0>;
+        clock-names = "xtal", "in12", "in3", "in4", "in56";
+
+        silab,ref-source = <SI5338_REF_SRC_CLKIN3>;
+        silab,fb-source = <SI5338_FB_SRC_NOCLK>;
+        silab,pll-source = <SI5338_PFD_IN_REF_REFCLK>;
+
+        /* output */
+        clkout0@0 {
+            reg = <0>;
+            silabs,drive-config = "1V8_LVDS";
+            silabs,clock-source = <SI5338_OUT_MUX_MSN>;
+            silabs,disable-state = <SI5338_OUT_DIS_HIZ>;
+            clock-frequency = <125000000>;
+        };
+        clkout1@1 {
+            reg = <1>;
+            silabs,drive-config = "1V8_LVDS";
+            silabs,clock-source = <SI5338_OUT_MUX_MSN>;
+            silabs,disable-state = <SI5338_OUT_DIS_HIZ>;
+            clock-frequency = <125000000>;
+        };
+        clkout2@2 {
+            reg = <2>;
+            silabs,drive-config = "1V8_LVDS";
+            silabs,clock-source = <SI5338_OUT_MUX_MSN>;
+            silabs,disable-state = <SI5338_OUT_DIS_HIZ>;
+            clock-frequency = <125000000>;
+            enabled;
+        };
+        clkout3@3 {
+            reg = <3>;
+            silabs,drive-config = "1V8_LVDS";
+            silabs,clock-source = <SI5338_OUT_MUX_MSN>;
+            silabs,disable-state = <SI5338_OUT_DIS_HIZ>;
+            clock-frequency = <125000000>;
+            enabled;
+        };
+    };
+};
+#endif
+
+#if 0
+/ {
+    fpga_axi: fpga-axi@0 {
+        interrupt-parent = <&gic>;
+        compatible = "simple-bus";
+        #address-cells = <0x2>;
+        #size-cells = <0x1>;
+        ranges = <0 0 0 0 0xffffffff>;
+
+        axi_rx_dma: axi_dmac@a00b1000 {
+            compatible = "adi,axi-dmac-1.00.a";
+            reg = <0x0 0xa00b1000 0x1000>;
+            #dma-cells = <0x1>;
+            #clock-cells = <0x0>;
+            interrupts = <0 95 0>;
+            clocks = <&clk 71>;
+
+            adi,channels {
+                #size-cells = <0x0>;
+                #address-cells = <0x1>;
+
+                dma-channel@0 {
+                    reg = <0x0>;
+                    adi,source-bus-width = <0x20>;
+                    adi,source-bus-type = <0x1>;
+                    adi,destination-bus-width = <0x40>;
+                    adi,destination-bus-type = <0x0>;
+                };
+            };
+        };
+
+        axi_tx_dma: axi_dmac@a00b0000 {
+            compatible = "adi,axi-dmac-1.00.a";
+            reg = <0x0 0xa00b0000 0x1000>;
+            #dma-cells = <0x1>;
+            #clock-cells = <0x0>;
+            interrupts = <0 96 0>;
+            clocks = <&clk 71>;
+
+            adi,channels {
+                #size-cells = <0x0>;
+                #address-cells = <0x1>;
+
+                dma-channel@0 {
+                    reg = <0x0>;
+                    adi,source-bus-width = <0x40>;
+                    adi,source-bus-type = <0x0>;
+                    adi,destination-bus-width = <0x20>;
+                    adi,destination-bus-type = <0x1>;
+                };
+            };
+        };
+    };
+};
+&axi_i2s_adi_0 {
+        compatible = "adi,axi-i2s-1.00.a";
+        reg = <0 0xa0020000 0 0x10000>;
+        dmas = <&axi_rx_dma 0 &axi_tx_dma 1>;
+        dma-names = "rx", "tx";
+        clocks = <&clk 71>, <&audio_clock>, <&audio_clock>;
+        clock-names = "axi", "ref", "i2s";
+
+        #sound-dai-cells = <0>;
+};
+
+&i2c1 {
+    adau1761: adau1761@3b {
+        compatible = "adi,adau1761";
+        reg = <0x3b>;
+        clocks = <&audio_clock>;
+        clock-names = "mclk";
+        #sound-dai-cells = <0>;
+    };
+
+};
+
+&amba_pl {
+    audio_clock: audio_clock {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <12288000>;
+    };
+
+    ab_sound {
+        compatible = "simple-audio-card";
+        simple-audio-card,name = "AB ADAU1761";
+        simple-audio-card,widgets =
+                "Microphone", "Mic In",
+                "Headphone", "Headphone Out",
+                "Line", "Line In",
+                "Line", "Line Out";
+        simple-audio-card,routing =
+                "Line Out", "LOUT",
+                "Line Out", "ROUT",
+                "Headphone Out", "LHP",
+                "Headphone Out", "RHP",
+                "Mic In", "MICBIAS",
+                "LINN", "Mic In",
+                "RINN", "Mic In",
+                "LAUX", "Line In",
+                "RAUX", "Line In";
+
+        simple-audio-card,dai-link@0 {
+                format = "i2s";
+                cpu {
+                        sound-dai = <&axi_i2s_adi_0>;
+                        frame-master;
+                        bitclock-master;
+                };
+                codec {
+                        sound-dai = <&adau1761>;
+                };
+        };
+    };
+};
+
+#endif
+#if 0
+&amba_pl {
+    /delete-node/ axi_dmac@a00b0000;
+    /delete-node/ axi_dmac@a00b1000;
+};
+
+#endif
